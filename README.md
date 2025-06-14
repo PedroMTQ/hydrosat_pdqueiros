@@ -180,6 +180,21 @@ dg list defs
 uv run --active dagster dev
 ```
 
+# TODO
+
+Most of the business logic was implemented to be quite simple, i.e., to respect the exercise requirements, but not to make further assumptions on additional requirements; these should be enough for a POC, whereas further complexity would need to be added on a per-business logic requirements basis.
+
+You can find below some points which I imagine would be the next logical steps for a more robust workflow:
+
+- Convert FieldDocument to process diverse polygons and not just squares.
+- Add FieldDocument processing, i.e., compare field data to bounding box data and any other relevant assets. You can check some dummy field processing in `src/hydrosat/services/core/documents/field_document.py`
+- Add actual bounding box processing, but that would be more complex than required for this exercise, I imagine doing something like saving the bounding box data into PGIS and then making it queriable by the field coordinates. But again, that would add a lot more complexity
+- Add proper run logging (postgres) or find a way to extract the correct run ids from dagster (see `has_event_record` in sensors.py)
+- Improve on [late date arrival](#note-on-late-data-arrival)
+
+
+
+# CONTENT BELOW HAS YET TO BE FINISHED
 
 
 # Cluster and terraform setup
@@ -312,17 +327,4 @@ kubectl logs <pod_name>
 
 
 
-
-
-# TODO
-
-Most of the business logic was implemented to be quite simple, i.e., to respect the exercise requirements, but not to make further assumptions on additional requirements; these should be enough for a POC, whereas further complexity would need to be added on a per-business logic requirements basis.
-
-You can find below some points which I imagine would be the next logical steps for a more robust workflow:
-
-- Convert FieldDocument to process diverse polygons and not just squares.
-- Add FieldDocument processing, i.e., compare field data to bounding box data and any other relevant assets. You can check some dummy field processing in `src/hydrosat/services/core/documents/field_document.py`
-- Add actual bounding box processing, but that would be more complex than required for this exercise, I imagine doing something like saving the bounding box data into PGIS and then making it queriable by the field coordinates. But again, that would add a lot more complexity
-- Add proper run logging (postgres) or find a way to extract the correct run ids from dagster (see `has_event_record` in sensors.py)
-- Improve on [late date arrival](#note-on-late-data-arrival)
 
