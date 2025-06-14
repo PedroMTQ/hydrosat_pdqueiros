@@ -8,7 +8,7 @@ Tools used
 
 Auto-scaling is enabled based on CPU usage, but likely it would be auto-scaled based on queue size, number of incoming requests, etc
 
-Lechat and chatgpt was used for support
+Lechat and chatgpt was used for support on the syntax of the various tools
 
 
 ## Requirements
