@@ -1,15 +1,39 @@
-# Description
+# hydrosat-pdqueiros
 
 Tools used
 - S3
 - Dagster for orchestration
-- K8s for pod deployment
+- K8s for pod deployment and auto-scaling of dagster as pods (one pod per asset)
 - Terraform for infrastructure creation
 
-Auto-scaling is enabled based on CPU usage, but likely it would be auto-scaled based on queue size, number of incoming requests, etc
+# TLDR, i.e., minikube+terraform
 
-Lechat and chatgpt was used for support on the syntax of the various tools
+# Setup
+1. Install [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+3. Install [Terraform](https://developer.hashicorp.com/terraform/install)
+4. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
 
+
+# Deployment
+
+```
+minikube start
+# if it doesnt exist
+kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
+terraform init
+terraform plan
+# now check the dashboard with
+minikube dashboard
+```
+
+
+## Destroy deployment
+
+```bash
+terraform destroy
+```
+
+# Description
 
 ## Requirements
 
@@ -329,110 +353,6 @@ You can see the job has run
 ![k8s_dashboard](images/fields_process_job_tags.png)
 
 And the data is available in S3:
-
-# Deployment with minikube+terraform
-
-1. Install [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
-3. Install [Terraform](https://developer.hashicorp.com/terraform/install)
-4. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
-
-
-```
-minikube start
-# if it doesnt exist
-kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
-terraform init
-terraform plan
-# now check the dashboard with
-minikube dashboard
-```
-
-
-## Destroy deployment
-
-```bash
-terraform destroy
-```
-
-
-# Local development and deployment
-
-## Building image
-
-### 1. Docker daemon setup
-
-Set docker compose to use same daemon as Minikube. 
-
-```bash
-```
-
-
-
-<!-- This tells Docker and Docker Compose to use the same Docker daemon as Minikube — so images are directly available to the cluster without needing to push.
-
-```bash
-minikube start --insecure-registry="localhost:5000"
-``` -->
-
-<!-- ```
-docker run -d -p 5000:5000 --restart=always --name registry registry:2
-``` -->
-
-
-
-## Terraform
-
-### Terraform.services
-
-Terraform is setup so that the 2 services (service1 and service2) stem from the same template (`modules/service/main.tf`), and in the root `main.tf` we just have a loop going over the services via local variables:
-
-```
-locals {
-  services = {
-    service1 = "src/dagster_k8s/services/service_1/jobs/service.py"
-    service2 = "src/dagster_k8s/services/service_2/jobs/service.py"
-  }
-}
-```
-
-The keys of this dictionary are used as the service name for logging purposes, whereas the value is used for starting the service.
-
-Run these commands in order:
-
-```bash
-terraform -chdir=terraform/services init
-terraform -chdir=terraform/services apply
-# you should see 2 pods, one for each service (since each service only has 1 replica)
-kubectl get pods
-# you can check the logs with
-kubectl logs <pod_name>
-```
-
-If you check the minikube dashboard you should also see the services
-
-### Terraform.dagster
-
-This is used for deploying dagster, in a production environment this is likely already deployed.
-It contains these components:
-
-- Dagster (scheduler)
-- Celery ("top level" message broker)
-- Rabbitmq ("internal" message broker we are using for celery)
-
-```bash
-terraform -chdir=terraform/dagster init
-terraform -chdir=terraform/services apply
-# you should see 2 pods, one for each service (since each service only has 1 replica)
-kubectl get pods
-# you can check the logs with
-kubectl logs <pod_name>
-```
-
-
-## Documentation & guides
-
-[Terraform](https://dev.to/chefgs/deploy-kubernetes-resources-in-minikube-cluster-using-terraform-1p8o)
-
 
 
 
