@@ -1,0 +1,9 @@
+
+# ! this is just to build service in src, deployment is done through terraform 
+
+services:
+  hydrosat_pdqueiros:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: localhost:5000/hydrosat_pdqueiros:latest

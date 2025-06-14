@@ -1,0 +1,9 @@
+# this file is just used for local testing
+storage:
+  postgres:
+    postgres_db:
+      hostname: localhost
+      username: hydrosat_user
+      password: hydrosat_password
+      db_name: hydrosat
+      port: 5432
