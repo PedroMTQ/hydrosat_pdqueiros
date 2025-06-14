@@ -1,7 +1,7 @@
 # hydrosat-pdqueiros
 
 Tools used
-- S3
+- Amazon's [S3](https://eu-central-1.console.aws.amazon.com/s3) and Amazon's [ECR](https://eu-central-1.console.aws.amazon.com/ecr)
 - Dagster for orchestration
 - K8s for pod deployment and auto-scaling of dagster as pods (one pod per asset)
 - Terraform for infrastructure creation
@@ -18,13 +18,30 @@ Tools used
 
 ```
 minikube start
-# if it doesnt exist
+# create the secret with the necessary env vars (if it doesnt exist)
+# make sure you always check the if you have the secret with 
+kubectl describe secret hydrosat-pdqueiros-secret -n hydrosat-pdqueiros
+# if you don't run the command below
 kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
 terraform init
 terraform plan
-# now check the dashboard with
 minikube dashboard
+# in another console run:
+terraform apply
+# now check the dashboard with
 ```
+
+*If you are checking the minikube dashbaord, make sure you use the correct namespace, i.e., "hydrosat-pdqueiros"*
+
+Generally it will take some time for terraform to finish since it waits until all deployments are done
+
+You can check the minikube dashboard, but later on to check dagster you can do this to enable port forwarding
+```bash
+export DAGSTER_WEBSERVER_POD_NAME=$(kubectl get pods --namespace hydrosat-pdqueiros -l "app.kubernetes.io/name=dagster,app.kubernetes.io/instance=dagster,component=dagster-webserver" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace hydrosat-pdqueiros port-forward $DAGSTER_WEBSERVER_POD_NAME 8080:80
+```
+
+and then go to `http://127.0.0.1:8080`
 
 
 ## Destroy deployment
@@ -218,8 +235,6 @@ You can find below some points which I imagine would be the next logical steps f
 
 
 
-# CONTENT BELOW HAS YET TO BE FINISHED
-
 
 # Deployment with minikube+helm
 
@@ -231,7 +246,7 @@ You can find below some points which I imagine would be the next logical steps f
 4. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
 
 
-# Docker image and tools deployment
+## Docker image and tools deployment
 
 1. Authenticate to Amazon ECR (this is the public registry I've set):
 
