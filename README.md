@@ -197,13 +197,131 @@ You can find below some points which I imagine would be the next logical steps f
 # CONTENT BELOW HAS YET TO BE FINISHED
 
 
-# Cluster and terraform setup
+# Deployment
+
+## Tools installation
 
 1. Install [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
-2. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
-3. Start minikube with `minikube start`
-4. Set minikube kubectl alias: `alias kubectl="minikube kubectl --"`
-5. Check node status `kubectl get nodes`; you should get something like this: `minikube   Ready    control-plane   33s   v1.33.1`
+2. Install [Helm](https://helm.sh/docs/intro/install/)
+3. Install [Terraform](https://developer.hashicorp.com/terraform/install)
+4. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
+
+
+# Docker image and tools deployment
+
+1. Authenticate to Amazon ECR (this is the public registry I've set):
+
+```bash
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+docker compose build
+docker tag hydrosat-pdqueiros:latest public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros:latest
+docker push public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros:latest
+```
+*Only after you need to change the image*
+
+You should see an image here:
+https://eu-central-1.console.aws.amazon.com/ecr/repositories/public/996091555539/hydrosat_pdqueiros?region=eu-central-1
+
+2. Start minikube with:
+```bash
+# we need this insecure registry to loag the image from localhost
+# see https://gist.github.com/trisberg/37c97b6cc53def9a3e38be6143786589
+minikube start
+# Check node status
+kubectl get nodes
+# you should get something like this: `minikube   Ready    control-plane   33s   v1.33.1`
+# set kubectl alias 
+alias kubectl="minikube kubectl --"
+kubectl config use-context minikube
+```
+
+2. Start minikube dashboard
+```bash
+minikube dashboard
+```
+
+
+*The output of the image list should match with the service_image variable in `dagster_k8s/terraform/services/terraform.tfvars`*
+
+
+3. Deploys the service and dagster with [Helm](https://docs.dagster.io/deployment/oss/deployment-options/kubernetes/deploying-to-kubernetes). Follow the instructions, once you get to the `values.yaml` part you need to set the user deployments. We will leave most things at default
+```
+# set minikube config 
+kubectl config use-context minikube
+# and check it
+kubectl config view
+# kubectl config set-context minikube --namespace default --cluster minikube --user=minikube
+
+# get dagster chart
+helm repo add dagster https://dagster-io.github.io/helm
+helm repo update
+```
+
+4. Add env variables as a K8s secret:
+```bash
+kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env
+```
+
+4. Setup dagster chart:
+```bash
+helm show values dagster/dagster > values.yaml
+```
+For example:
+```yaml
+    - name: "hydrosat-pdqueiros"
+      image:
+        repository: "public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros:latest"
+        tag: latest
+        pullPolicy: Always
+      dagsterApiGrpcArgs:
+        - "--python-file"
+        - "src/hydrosat_pdqueiros/defs/definitions.py"
+      envSecrets: 
+        - name: hydrosat-pdqueiros-secret
+```
+
+And deploy it:
+```bash
+helm upgrade --install dagster dagster/dagster -f values.yaml
+```
+
+Check the dashboard and see if the pods are running
+![k8s_dashboard](images/k8s.png)
+
+You probably won't have any data in your bucket
+![k8s_dashboard](images/k8s_logs_no_data.png)
+
+So now just run the test sample creation with
+```bash
+source env.sh
+source activate.sh
+python tests/create_sample_data.py
+```
+
+You can then manually add the data to the bucket
+
+
+After adding bounding boxes data:
+
+![k8s_dashboard](images/k8s__logs_added_bounding_boxes.png)
+
+You can then see the dashboard and find that it ran some jobs:
+![k8s_dashboard](images/k8s_bounding_boxes_dashboarb.png)
+
+And one of the jobs:
+![k8s_dashboard](images/k8s_bounding_boxes_job.png)
+
+And if you check s3 you will the output from the job:
+![k8s_dashboard](images/s3_bounding_boxes_output.png)
+
+
+Now let's try with fields data:
+![k8s_dashboard](images/fields_data.png)
+
+You can see the job has run
+![k8s_dashboard](images/fields_process_job_tags.png)
+
+And the data is available in S3:
 
 # Deployment
 
@@ -236,28 +354,11 @@ terraform -chdir=terraform destroy
 
 ### 1. Docker daemon setup
 
-Set docker compose to use same daemon as Minikube. In a prod environment, we'd have a registry hosted somewhere.
+Set docker compose to use same daemon as Minikube. 
 
 ```bash
-eval $(minikube docker-env)
 ```
 
-### 2. Build docker image
-
-This build the image of the services we want to deploy. In this case we are only building a single image, although we have multiple deployments (i.e., different services). This is sufficient for the current use-case, but we could compartmentalize the containers to save on image size and reduce the requirements for each service.
-
-```bash
-docker compose  -f docker-compose-build.yaml build
-# check if images is available with 
-minikube image list | grep dagster_service
-```
-The output of the image list should match with the service_image variable in `dagster_k8s/terraform/services/terraform.tfvars`
-
-You can then test this image with:
-
-```bash
-docker compose up
-```
 
 
 <!-- This tells Docker and Docker Compose to use the same Docker daemon as Minikube — so images are directly available to the cluster without needing to push.

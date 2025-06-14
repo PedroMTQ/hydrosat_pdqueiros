@@ -6,4 +6,4 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: localhost:5000/hydrosat_pdqueiros:latest
+    image: hydrosat-pdqueiros:latest

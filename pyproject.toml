@@ -11,7 +11,10 @@ dependencies = [
     "uuid6",
     "dagster",
     "dagster-postgres",
+    "dagster-k8s",
     "boto3",
+    "numpy",
+    "shapely",
 ]
 
 [dependency-groups]

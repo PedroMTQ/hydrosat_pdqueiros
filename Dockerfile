@@ -7,10 +7,10 @@ FROM python:3.11.3-bullseye AS build
 
 # installs uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# This makes sure that logs show up immediately instead of being buffered
+ENV PYTHONUNBUFFERED=1
 
-RUN ls
 WORKDIR /opt/dagster/app
-RUN ls
 COPY ./uv.lock /opt/dagster/app/uv.lock
 COPY ./pyproject.toml /opt/dagster/app/pyproject.toml
 COPY ./README.md /opt/dagster/app/README.md
@@ -20,7 +20,6 @@ RUN echo $(grep -m 1 'version' /opt/dagster/app/pyproject.toml | sed -E 's/versi
 
 # copying source code
 COPY ./src/ /opt/dagster/app/src/
-
 # installs package
 RUN uv sync --frozen
 ENV PATH="/opt/dagster/app/.venv/bin:$PATH"
