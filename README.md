@@ -197,7 +197,7 @@ You can find below some points which I imagine would be the next logical steps f
 # CONTENT BELOW HAS YET TO BE FINISHED
 
 
-# Deployment
+# Deployment with minikube+helm
 
 ## Tools installation
 
@@ -266,13 +266,20 @@ kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env
 ```bash
 helm show values dagster/dagster > values.yaml
 ```
-For example:
+
+These are the changes I've made:
+
 ```yaml
+---
+global:
+  serviceAccountName: "hydrosat-pdqueiros"
+
+dagster-user-deployments:
+  deployments:
     - name: "hydrosat-pdqueiros"
       image:
-        repository: "public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros:latest"
+        repository: "public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros"
         tag: latest
-        pullPolicy: Always
       dagsterApiGrpcArgs:
         - "--python-file"
         - "src/hydrosat_pdqueiros/defs/definitions.py"
@@ -323,28 +330,28 @@ You can see the job has run
 
 And the data is available in S3:
 
-# Deployment
+# Deployment with minikube+terraform
 
-## Export environmental variables
-Run to export the necessary environmental variables:
+1. Install [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+3. Install [Terraform](https://developer.hashicorp.com/terraform/install)
+4. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
 
-Export the `public.env` and either `template.env` or `.env`, `.env` when in a "production" environment with secrets
-```bash
-export $(grep -v '^#' public.env | xargs -d '\n')
-export $(grep -v '^#' template.env | xargs -d '\n')
-export $(grep -v '^#' .env | xargs -d '\n')
+
+```
+minikube start
+# if it doesnt exist
+kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
+terraform init
+terraform plan
+# now check the dashboard with
+minikube dashboard
 ```
 
-### Apply and deploy with terraform
+
+## Destroy deployment
 
 ```bash
-terraform -chdir=terraform apply
-```
-
-### Destroy pods
-
-```bash
-terraform -chdir=terraform destroy
+terraform destroy
 ```
 
 

@@ -1,1 +1,0 @@
-namespace = "hydrosat-pdqueiros"

@@ -72,3 +72,9 @@ tmp/
 
 .tmp*
 .ruff_cache/
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+*.tfplan
+*.tfvars
