@@ -5,7 +5,8 @@ from pathlib import Path
 
 import uuid6
 
-from hydrosat_pdqueiros.services.core.documents import BoundingBoxDocument, FieldDocument
+from hydrosat_pdqueiros.services.core.documents.bounding_box_document import BoundingBoxDocument
+from hydrosat_pdqueiros.services.core.documents.field_document import FieldDocument
 from hydrosat_pdqueiros.services.io.s3_client import ClientS3
 from hydrosat_pdqueiros.services.settings import BOXES_FOLDER_INPUT, FIELDS_FOLDER_INPUT, TESTS
 

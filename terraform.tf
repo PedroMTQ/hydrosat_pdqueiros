@@ -9,11 +9,11 @@ variable "namespace" {
 }
 
 
-resource "kubernetes_namespace" "hydrosat_pdqueiros_namespace" {
-  metadata {
-    name = var.namespace
-  }
-}
+# resource "kubernetes_namespace" "hydrosat_pdqueiros_namespace" {
+#   metadata {
+#     name = var.namespace
+#   }
+# }
 
 
 terraform {
@@ -50,7 +50,7 @@ resource "helm_release" "dagster" {
   chart      = "dagster"
   namespace  = var.namespace
   version    = var.dagster_version
-  depends_on = [kubernetes_namespace.hydrosat_pdqueiros_namespace]
+  # depends_on = [kubernetes_namespace.hydrosat_pdqueiros_namespace]
   values = [file("${path.module}/dagster-chart.yaml")]
 }
 

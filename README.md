@@ -42,6 +42,8 @@ I've included a `.env-template` you can just rename to `.env` and add yhour AWS 
 
 ```
 minikube start
+# if the namespace does not exist
+kubectl create namespace hydrosat-pdqueiros
 # create the secret with the necessary env vars (if it doesnt exist)
 # make sure you always check the if you have the secret with 
 kubectl describe secret hydrosat-pdqueiros-secret -n hydrosat-pdqueiros

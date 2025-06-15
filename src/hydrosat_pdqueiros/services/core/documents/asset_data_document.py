@@ -2,7 +2,8 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from hydrosat_pdqueiros.services.core.documents import BoundingBoxDocument, FieldDocument
+from hydrosat_pdqueiros.services.core.documents.bounding_box_document import BoundingBoxDocument
+from hydrosat_pdqueiros.services.core.documents.field_document import FieldDocument
 from hydrosat_pdqueiros.services.io.logger import logger
 
 ASSETS_DOCUMENTS = {c.__name__:c for c in [FieldDocument, BoundingBoxDocument]}
