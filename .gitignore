@@ -77,5 +77,4 @@ terraform.tfstate
 terraform.tfstate.*
 crash.log
 *.tfplan
-*.tfvars
 .terraform.tfstate.lock.info

@@ -1,17 +1,15 @@
 
 variable "dagster_version" {
   type        = string
-  # check with  `helm search repo dagster/dagster --versions | head -n 2`
-  default = "1.10.20"
+
 }
 
 variable "namespace" {
   type        = string
-  default = "hydrosat-pdqueiros"
 }
 
 
-resource "kubernetes_namespace" "dagster_k8_terraform_namespace" {
+resource "kubernetes_namespace" "hydrosat_pdqueiros_namespace" {
   metadata {
     name = var.namespace
   }
@@ -31,6 +29,7 @@ terraform {
   }
 }
 
+# if you are not using minikube you need to change these 2
 provider "kubernetes" {
   config_path = "~/.kube/config"
   config_context = "minikube"
@@ -51,7 +50,7 @@ resource "helm_release" "dagster" {
   chart      = "dagster"
   namespace  = var.namespace
   version    = var.dagster_version
-  depends_on = [kubernetes_namespace.dagster_k8_terraform_namespace]
+  depends_on = [kubernetes_namespace.hydrosat_pdqueiros_namespace]
   values = [file("${path.module}/dagster-chart.yaml")]
 }
 
