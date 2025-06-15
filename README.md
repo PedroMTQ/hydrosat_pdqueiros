@@ -42,13 +42,6 @@ I've included a `.env-template` you can just rename to `.env` and add yhour AWS 
 
 ```
 minikube start
-# if the namespace does not exist
-kubectl create namespace hydrosat-pdqueiros
-# create the secret with the necessary env vars (if it doesnt exist)
-# make sure you always check the if you have the secret with 
-kubectl describe secret hydrosat-pdqueiros-secret -n hydrosat-pdqueiros
-# if you don't run the command below
-kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
 # then start terraforming...
 terraform init
 terraform plan
@@ -334,12 +327,24 @@ dagster-user-deployments:
 
 Now run:
 
+
+
 ```
+
+# if the namespace does not exist
+kubectl create namespace hydrosat-pdqueiros
+# create the secret with the necessary env vars (if it doesnt exist)
+# make sure you always check the if you have the secret with 
+kubectl describe secret hydrosat-pdqueiros-secret -n hydrosat-pdqueiros
+# if you don't run the command below
+kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
+
 # set minikube config 
 kubectl config use-context minikube
 # and check it
 kubectl config view
 kubectl config set-context minikube --namespace hydrosat-pdqueiros --cluster minikube --user=hydrosat-pdqueiros
+
 
 # get dagster chart
 helm repo add dagster https://dagster-io.github.io/helm

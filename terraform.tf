@@ -9,11 +9,11 @@ variable "namespace" {
 }
 
 
-# resource "kubernetes_namespace" "hydrosat_pdqueiros_namespace" {
-#   metadata {
-#     name = var.namespace
-#   }
-# }
+resource "kubernetes_namespace" "hydrosat_pdqueiros_namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
 
 
 terraform {
@@ -42,6 +42,13 @@ provider "helm" {
   }
 }
 
+# probably not the best way to do this, likely it's best to use tfvars
+resource "null_resource" "create_secret" {
+  provisioner "local-exec" {
+    command = "kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros"
+  }
+}
+
 
 
 resource "helm_release" "dagster" {
@@ -50,7 +57,7 @@ resource "helm_release" "dagster" {
   chart      = "dagster"
   namespace  = var.namespace
   version    = var.dagster_version
-  # depends_on = [kubernetes_namespace.hydrosat_pdqueiros_namespace]
+  depends_on = [kubernetes_namespace.hydrosat_pdqueiros_namespace, null_resource.create_secret]
   values = [file("${path.module}/dagster-chart.yaml")]
 }
 
