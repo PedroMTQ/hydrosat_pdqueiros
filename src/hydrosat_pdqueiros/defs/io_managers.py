@@ -1,12 +1,11 @@
 import json
 import os
-from pathlib import Path
 from abc import abstractmethod
+from pathlib import Path
 
 from dagster import InputContext, IOManager, OutputContext, io_manager
 
-from hydrosat_pdqueiros.services.core.documents.asset_data_document import AssetDataDocument
-from hydrosat_pdqueiros.services.io.run_logger import RunLogger
+from hydrosat_pdqueiros.services.core.documents import AssetDataDocument
 from hydrosat_pdqueiros.services.io.s3_client import ClientS3
 
 
@@ -39,7 +38,6 @@ class IOManagerInput(IOManager):
                 context.log.debug(f"Deleted temp {file_type} file {file_path}")
             except Exception as e:
                 context.log.error(f"Failed to delete temp {file_type} file {file_path}: {e}")
-        RunLogger().finish_run(s3_path=asset_data_document.s3_path)
 
     @abstractmethod
     def load_input(self, context: InputContext) -> list[dict]:
@@ -49,7 +47,7 @@ class IOManagerInput(IOManager):
 class IOManagerFieldsInput(IOManagerInput):
     def load_input(self, context: InputContext) -> list[str]:
         s3_client: ClientS3 = context.resources.s3_resource
-        return s3_client.get_output_bounding_boxes()
+        return s3_client.get_output_fields()
 
 class IOManagerBoundingBoxInput(IOManagerInput):
     def load_input(self, context: InputContext) -> list[str]:
@@ -57,7 +55,6 @@ class IOManagerBoundingBoxInput(IOManagerInput):
         return s3_client.get_output_bounding_boxes()
 
 
-# Im just reusing the components but I imagine the bounding box processing would store into PGIS or some queriable DB that doesnt depend on the box ID
 
 @io_manager(required_resource_keys={'s3_resource'})
 def io_manager_fields(context):

@@ -5,8 +5,7 @@ from pathlib import Path
 
 import uuid6
 
-from hydrosat_pdqueiros.services.core.documents.bounding_box_document import BoundingBoxDocument
-from hydrosat_pdqueiros.services.core.documents.field_document import FieldDocument
+from hydrosat_pdqueiros.services.core.documents import BoundingBoxDocument, FieldDocument
 from hydrosat_pdqueiros.services.io.s3_client import ClientS3
 from hydrosat_pdqueiros.services.settings import BOXES_FOLDER_INPUT, FIELDS_FOLDER_INPUT, TESTS
 
@@ -40,17 +39,14 @@ def generate_fields_files():
         sample_date = f"2025-06-{day_str}"
         for _ in range(random.choice([1,2,3])):
             file_name = f'fields_{sample_date}_{get_uuid()}.jsonl'
-            file_data = []
             # we allocate a field to each box for simplicity sake -> later used for partitioning the assets
             for _ in range(random.randint(10,30)):
                 box_id = get_box_id()
-                field_data = [*generate_random_coordinates(max_int=10)] + [box_id]
+                field_data = [*generate_random_coordinates(max_int=10)]
                 data = FieldDocument(*field_data).to_dict()
-                file_data.append(data)
                 Path(os.path.join(FIELDS_FOLDER, box_id)).mkdir(parents=True, exist_ok=True)
                 with open(os.path.join(FIELDS_FOLDER, box_id, file_name), 'a+') as file:
-                    for line in file_data:
-                        file.write(f'{json.dumps(line)}\n')
+                    file.write(f'{json.dumps(data)}\n')
 
 def generate_bounding_box_files():
     Path(BOXES_FOLDER).mkdir(parents=True, exist_ok=True)

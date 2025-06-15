@@ -3,8 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 from shapely.geometry import box
 
-from hydrosat_pdqueiros.services.core.documents.base_document import BaseDocument
-from hydrosat_pdqueiros.services.core.documents.bounding_box_document import BoundingBoxDocument
+from hydrosat_pdqueiros.services.core.documents import BaseDocument, BoundingBoxDocument
 
 
 @dataclass

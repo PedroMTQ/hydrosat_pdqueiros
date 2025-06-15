@@ -11,11 +11,11 @@ from hydrosat_pdqueiros.services.settings import (
     AWS_SECRET_ACCESS_KEY,
     BOXES_FOLDER_INPUT,
     BOXES_FOLDER_OUTPUT,
+    BOXES_PATTERN,
     FIELDS_FOLDER_INPUT,
     FIELDS_FOLDER_OUTPUT,
-    BOXES_PATTERN,
-    S3_BUCKET,
     FIELDS_PATTERN,
+    S3_BUCKET,
 )
 
 
@@ -91,7 +91,7 @@ class ClientS3():
         '''
         self.__client.upload_file(Filename=local_path, Bucket=self.__bucket_name, Key=s3_path)
 
-    def file_exists(self, s3_path: str):
+    def file_exists(self, s3_path: str) -> bool:
         try:
             self.__client.get_object(Bucket=self.__bucket_name, Key=s3_path)
             return True

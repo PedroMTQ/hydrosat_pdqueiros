@@ -1,4 +1,4 @@
-from dagster import define_asset_job, RetryPolicy, Jitter, Backoff
+from dagster import RetryPolicy, define_asset_job
 
 from hydrosat_pdqueiros.defs.assets import (
     asset_bounding_box,

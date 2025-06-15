@@ -52,7 +52,7 @@ resource "helm_release" "dagster" {
   namespace  = var.namespace
   version    = var.dagster_version
   depends_on = [kubernetes_namespace.dagster_k8_terraform_namespace]
-  values = [file("${path.module}/values.yaml")]
+  values = [file("${path.module}/dagster-chart.yaml")]
 }
 
 

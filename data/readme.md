@@ -1,1 +1,1 @@
-this contains data from DBs or temp data
+this contains data from the local postgres volume (for dev testing)

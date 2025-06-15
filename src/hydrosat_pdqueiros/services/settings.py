@@ -5,7 +5,6 @@ SERVICE_NAME = 'hydrosat_pdqueiros'
 CODE_VERSION = importlib.metadata.version(SERVICE_NAME)
 
 ROOT = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-CONFIGS = os.path.join(ROOT, 'config')
 DATA = os.path.join(ROOT, 'data')
 TEMP = os.path.join(ROOT, 'tmp')
 TESTS = os.path.join(ROOT, 'tests')

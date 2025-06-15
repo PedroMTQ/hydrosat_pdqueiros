@@ -8,13 +8,37 @@ Tools used
 
 # TLDR, i.e., minikube+terraform
 
-# Setup
+## Setup
 1. Install [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
-3. Install [Terraform](https://developer.hashicorp.com/terraform/install)
-4. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
+2. Install [Terraform](https://developer.hashicorp.com/terraform/install)
+3. Install [minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download). We are running minikube since we are deploying a k8s cluster locally.
+4. **Create .env file with these values:**
+
+```
+# credentials
+AWS_DEFAULT_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+S3_BUCKET=
+
+#static variables
+DATE_FORMAT=%Y-%m-%d
+S3_DATE_REGEX=\d{4}-\d{2}-\d{2}
+FIELDS_FOLDER_INPUT=fields/input
+FIELDS_FOLDER_OUTPUT=fields/output
+BOXES_FOLDER_INPUT=boxes/input
+BOXES_FOLDER_OUTPUT=boxes/output
+FIELDS_PATTERN=fields_\d{4}-\d{2}-\d{2}(.*)?\.jsonl$
+BOXES_PATTERN=bounding_box_.*\.jsonl
+START_DATE=2025-06-02
+```
+I've included a `.env-template` you can just rename to `.env` and add yhour AWS credentials.
+**After** this is done you can deploy:
 
 
-# Deployment
+
+## Deployment
+
 
 ```
 minikube start
@@ -23,25 +47,27 @@ minikube start
 kubectl describe secret hydrosat-pdqueiros-secret -n hydrosat-pdqueiros
 # if you don't run the command below
 kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
+# then start terraforming...
 terraform init
 terraform plan
-minikube dashboard
-# in another console run:
 terraform apply
-# now check the dashboard with
+# in another console you can check the dashboard with:
+minikube dashboard
 ```
 
-*If you are checking the minikube dashbaord, make sure you use the correct namespace, i.e., "hydrosat-pdqueiros"*
+**If you are checking the minikube dashbaord, make sure you use the correct namespace, i.e., "hydrosat-pdqueiros"**
 
 Generally it will take some time for terraform to finish since it waits until all deployments are done
 
-You can check the minikube dashboard, but later on to check dagster you can do this to enable port forwarding
+You can already check the minikube dashboard, but later on to work with dagster you can do this to enable port forwarding:
 ```bash
 export DAGSTER_WEBSERVER_POD_NAME=$(kubectl get pods --namespace hydrosat-pdqueiros -l "app.kubernetes.io/name=dagster,app.kubernetes.io/instance=dagster,component=dagster-webserver" -o jsonpath="{.items[0].metadata.name}")
 kubectl --namespace hydrosat-pdqueiros port-forward $DAGSTER_WEBSERVER_POD_NAME 8080:80
 ```
 
 and then go to `http://127.0.0.1:8080`
+
+**Note that port forwarding needs to be running whenever you want to work with dagster**
 
 
 ## Destroy deployment
@@ -59,7 +85,7 @@ terraform destroy
 - Each partition is dependent on the preceeding day.
 - Files should be read and written to S3 bucket (e.g., AWS)
 
-### Task description
+## Task description
 
 Data shall have daily partitions, where each partition depends on the partition of the preceding day. Further, it shall read asset inputs from and write asset outputs to a configurable S3 bucket (or an equivalent of the latter).
 
@@ -138,6 +164,8 @@ fields/input/01976dbcbdb77dc4b9b61ba545503b77/fields_2025-06-02.jsonl
 fields/output/01976dbcbdb77dc4b9b61ba545503b77/fields_2025-06-02.jsonl
 ```
 
+These data types are implemented as data classes `src/hydrosat_pdqueiros/services/core/documents/bounding_box_document.py` and `src/hydrosat_pdqueiros/services/core/documents/field_document.py`. 
+**Since we are not dong any real data transformations, I assume that fields are rectangular (similar to bounding boxes)**
 
 ## Dependencies testing
 
@@ -150,37 +178,37 @@ Regarding the complication describe above (i.e., adding fields data on different
 - Upload file to the correct S3 folder, e.g., fields/input/01976dbcbdb77dc4b9b61ba545503b77/fields_2025-06-02_THIS_IS_A_RANDOM_STRING.jsonl
 - wait for sensor to check dependencies
 
-Check `fields_dependencies_are_available` in sensors.py for an overview of how this works.
+Check `sensors.py/fields_dependencies_are_available` in sensors.py for an overview of how this works.
 
-Keep in mind that we don't do any asset aggregation since this would depend on downstream business logic.
+Keep in mind that we don't do any assets aggregation since this would depend on downstream business logic.
 
 
 
 # Local deployment
 
+The section below is mostly for development purposes; the only infra requirement we have is postgres, for that *make sure the postgres credentials match the ones found in the `dagster.yaml` file*
+
 ## Initial setup
 
 1. Setup .env file
 
-*Make sure the postgres credentials match the ones found in the `dagster.yaml` file*
-
 ```
-POSTGRES_HOST=hydrosat-postgres
-POSTGRES_PORT=5432
-POSTGRES_USER=hydrosat_user
-POSTGRES_PASSWORD=hydrosat_password
-POSTGRES_DB=hydrosat
-
 AWS_DEFAULT_REGION=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 S3_BUCKET=
 ```
 
-1. Export environmental variables and deploy postgres:
+1. Export environmental variables:
 
 ```bash
 source env.sh
+```
+
+
+1. Deploy postgres:
+
+```bash
 docker compose -f docker-compose-infra.yaml up -d
 ```
 
@@ -200,14 +228,14 @@ sudo lsof -t -i:5432 | xargs sudo kill -9
 
 2. Create S3 bucket if needed (same name as `S3_BUCKET`)
 
-3. Install UV (if needed) and activate your environment with:
+3. [Install UV](https://docs.astral.sh/uv/getting-started/installation/) (**recommended**) and activate your environment with:
 *Keep in mind that the `activate.sh` command assumes you are using UV for enviorenment management, if you prefer use something else like venv, conda, mamba, etc*
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source activate.sh
 ```
 
-4. Create test data and upload it to S3 (automatic):
+4. Create test data and upload it to S3:
 ```bash
 python tests/create_sample_data.py
 ```
@@ -221,7 +249,7 @@ dg list defs
 uv run --active dagster dev
 ```
 
-# TODO
+# Business logic TODO
 
 Most of the business logic was implemented to be quite simple, i.e., to respect the exercise requirements, but not to make further assumptions on additional requirements; these should be enough for a POC, whereas further complexity would need to be added on a per-business logic requirements basis.
 
@@ -234,9 +262,9 @@ You can find below some points which I imagine would be the next logical steps f
 - Improve on [late date arrival](#note-on-late-data-arrival)
 
 
-
-
 # Deployment with minikube+helm
+
+This section was the second develoment step, i.e., putting together the infrastructure. I've kept things simple by using Dagster's default helm chart with only the essential changes so that we can run the public image of this codebase.
 
 ## Tools installation
 
@@ -248,7 +276,7 @@ You can find below some points which I imagine would be the next logical steps f
 
 ## Docker image and tools deployment
 
-1. Authenticate to Amazon ECR (this is the public registry I've set):
+1. Authenticate to Amazon ECR (this is the public registry I've set). This step is only needed if you need to modify the image.
 
 ```bash
 aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
@@ -256,7 +284,6 @@ docker compose build
 docker tag hydrosat-pdqueiros:latest public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros:latest
 docker push public.ecr.aws/d8n7f1a1/hydrosat_pdqueiros:latest
 ```
-*Only after you need to change the image*
 
 You should see an image here:
 https://eu-central-1.console.aws.amazon.com/ecr/repositories/public/996091555539/hydrosat_pdqueiros?region=eu-central-1
@@ -280,36 +307,13 @@ minikube dashboard
 ```
 
 
-*The output of the image list should match with the service_image variable in `dagster_k8s/terraform/services/terraform.tfvars`*
+*The output of the image list should match with the service_image variable in `dagster-chart.yaml`* (see below)
 
 
-3. Deploys the service and dagster with [Helm](https://docs.dagster.io/deployment/oss/deployment-options/kubernetes/deploying-to-kubernetes). Follow the instructions, once you get to the `values.yaml` part you need to set the user deployments. We will leave most things at default
-```
-# set minikube config 
-kubectl config use-context minikube
-# and check it
-kubectl config view
-# kubectl config set-context minikube --namespace default --cluster minikube --user=minikube
+3. Deploy the service and dagster with [Helm](https://docs.dagster.io/deployment/oss/deployment-options/kubernetes/deploying-to-kubernetes). I've already set the chart file, so you don't need to change anything.
 
-# get dagster chart
-helm repo add dagster https://dagster-io.github.io/helm
-helm repo update
-```
-
-4. Add env variables as a K8s secret:
-```bash
-kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env
-```
-
-4. Setup dagster chart:
-```bash
-helm show values dagster/dagster > values.yaml
-```
-
-These are the changes I've made:
-
+List of changes:
 ```yaml
----
 global:
   serviceAccountName: "hydrosat-pdqueiros"
 
@@ -326,9 +330,31 @@ dagster-user-deployments:
         - name: hydrosat-pdqueiros-secret
 ```
 
+Now run:
+
+```
+# set minikube config 
+kubectl config use-context minikube
+# and check it
+kubectl config view
+kubectl config set-context minikube --namespace hydrosat-pdqueiros --cluster minikube --user=hydrosat-pdqueiros
+
+# get dagster chart
+helm repo add dagster https://dagster-io.github.io/helm
+helm repo update
+```
+
+4. Add env variables as a K8s secret:
+```bash
+kubectl create secret generic hydrosat-pdqueiros-secret --from-env-file=.env -n hydrosat-pdqueiros
+```
+
+
+
+
 And deploy it:
 ```bash
-helm upgrade --install dagster dagster/dagster -f values.yaml
+helm upgrade --install dagster dagster/dagster -f dagster-chart.yaml
 ```
 
 Check the dashboard and see if the pods are running
@@ -367,7 +393,5 @@ Now let's try with fields data:
 You can see the job has run
 ![k8s_dashboard](images/fields_process_job_tags.png)
 
-And the data is available in S3:
 
-
-
+Congratulations for making it to the end! If you want a simplified versionn go back to the [top](#tldr-ie-minikubeterraform) and have fun with your deployed service.

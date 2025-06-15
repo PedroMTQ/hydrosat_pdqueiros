@@ -1,6 +1,0 @@
-execution:
-  k8s:
-    config:
-      job_namespace: 'default'
-      image_pull_policy: 'Always'
-      service_account_name: 'hydrosat-pdqueiros'

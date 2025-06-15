@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
 from dagster import (
     DefaultSensorStatus,
     RunRequest,
@@ -14,7 +14,6 @@ from dagster import (
 from hydrosat_pdqueiros.defs.jobs import job_process_bounding_boxes, job_process_fields
 from hydrosat_pdqueiros.defs.partitions import DAILY_PARTITIONS
 from hydrosat_pdqueiros.services.io.logger import logger
-from hydrosat_pdqueiros.services.io.run_logger import RunLogger
 from hydrosat_pdqueiros.services.io.s3_client import ClientS3
 from hydrosat_pdqueiros.services.settings import (
     BOXES_FOLDER_INPUT,
@@ -31,51 +30,11 @@ from hydrosat_pdqueiros.services.settings import (
 DATE_REGEX_PATTERN = re.compile(S3_DATE_REGEX)
 
 
-# def yield_asset_materializations(context: SensorEvaluationContext, asset_key: AssetKey):
-#     '''yields all records until where are no more results, i.e., event_record_has_more is False'''
-#     cursor = None
-#     while True:
-#         result: EventRecordsResult = context.instance.fetch_materializations(records_filter=asset_key,
-#                                                                              limit=MATERIALIZATIONS_FETCHER_LIMIT, cursor=cursor)
-#         context.log.info(f'yielding: {asset_key}: {result}')
-
-#         event_record: EventLogRecord
-#         for event_record in result.records:
-#             context.log.debug(f'event_record: {event_record}')
-#             yield event_record
-#         if not result.has_more:
-#             return
-#         cursor = result.cursor
-
-
-# def has_event_record(context: SensorEvaluationContext,
-#                      asset_key: AssetKey,
-#                      s3_path: str) -> bool:
-#     ''' iterates over all event records to find the one for a given run_id/s3_path'''
-#     # this seems quite hacky, so maybe there's a better way?
-#     # we could use AssetRecordsFilter for improved filtering (by date) but the date wouldn't necessarily match the one in the partition
-#     event_record: EventLogRecord
-#     for event_record in yield_asset_materializations(context=context,asset_key=asset_key):
-#         event_tags = event_record.event_log_entry.dagster_event.logging_tags
-#         context.log.info(f'event: {event_record} event_tags {event_tags}')
-#         if event_record.run_id == s3_path:
-#             return True
-#     return False
-
-# def has_event_record(s3_path: Optional[str]=None, pattern: Optional[re.Pattern]=None):
-#     '''
-#     this was meant to be used as a "DB" but it's not very robust, especially during testing. We will just check S3 instead.
-#     '''
-#     return RunLogger().run_finished(s3_path=s3_path, pattern=pattern)
-
-
-
-
 def fields_dependencies_are_available(context: SensorEvaluationContext,
                                       s3_client: ClientS3,
                                       s3_path: str,
                                       box_id: str,
-                                      date_str: str):
+                                      date_str: str) -> bool:
     '''checks if all dependencies for a field execution are met'''
     date_obj = datetime.strptime(date_str, DATE_FORMAT)
     all_dates = [datetime.strptime(partition_date, DATE_FORMAT) for partition_date in DAILY_PARTITIONS.get_partition_keys()]
@@ -88,6 +47,7 @@ def fields_dependencies_are_available(context: SensorEvaluationContext,
     if not s3_client.file_exists(output_box_file):
         context.log.info(f'Field data {s3_path} skipped since output box file {output_box_file} is not available yet')
         return False
+    # if the field is the first one given the date limits, you can go ahead and process
     if date_obj == earliest_date:
         return True
     sorted_dates = sorted(all_dates)
