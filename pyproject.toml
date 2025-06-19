@@ -23,9 +23,6 @@ dev = [
     "dagster-dg-cli[local]",
 ]
 
-# [tool.dagster]
-# module_name = "src.hydrosat_pdqueiros"
-
 [tool.dg]
 directory_type = "project"
 

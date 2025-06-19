@@ -8,13 +8,13 @@ from hydrosat_pdqueiros.services.core.documents.base_document import BaseDocumen
 @dataclass
 class BoundingBoxDocument(BaseDocument):
     def __post_init__(self):
-        if self.irrigationgArray is None:
-            height = int(self.coordinatesYMax - self.coordinatesYMin)
-            width = int(self.coordinatesXMax - self.coordinatesXMin)
-            self.irrigationgArray = np.random.choice([0, 1], size=(height, width))
-        height = int(self.coordinatesYMax - self.coordinatesYMin)
-        width = int(self.coordinatesXMax - self.coordinatesXMin)
-        assert self.irrigationgArray.shape == (height, width), f'Array shape {self.irrigationgArray.shape} does not match expected ({height}, {width}) from coordinates'
+        if self.irrigation_array is None:
+            height = int(self.coordinates_y_max - self.coordinates_y_min)
+            width = int(self.coordinates_x_max - self.coordinates_x_min)
+            self.irrigation_array = np.random.choice([0, 1], size=(height, width))
+        height = int(self.coordinates_y_max - self.coordinates_y_min)
+        width = int(self.coordinates_x_max - self.coordinates_x_min)
+        assert self.irrigation_array.shape == (height, width), f'Array shape {self.irrigation_array.shape} does not match expected ({height}, {width}) from coordinates'
 
 
     def is_valid(self) -> bool:
@@ -23,11 +23,11 @@ class BoundingBoxDocument(BaseDocument):
 
 
 if __name__ == '__main__':
-    doc = BoundingBoxDocument(coordinatesXMin=0,
-                              coordinatesYMin=10,
-                              coordinatesXMax=10,
-                              coordinatesYMax=20,
-                              boxId='hg',
+    doc = BoundingBoxDocument(coordinates_x_min=0,
+                              coordinates_y_min=10,
+                              coordinates_x_max=10,
+                              coordinates_y_max=20,
+                              box_id='hg',
                               )
     print(doc)
     doc_dict = doc.to_dict()

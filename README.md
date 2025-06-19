@@ -34,7 +34,13 @@ START_DATE=2025-06-02
 ```
 I've included a `.env-template` you can just rename to `.env` and add yhour AWS credentials.
 **After** this is done you can deploy:
-
+5. Login to ECR so you can pull the latest image:
+```bash
+# if you haven't set the AWS credentials in your .bashrc file, you need to export them with:
+source env.sh
+# and then just login:
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+```
 
 
 ## Deployment
@@ -50,7 +56,7 @@ terraform apply
 minikube dashboard
 ```
 
-**If you are checking the minikube dashbaord, make sure you use the correct namespace, i.e., "hydrosat-pdqueiros"**
+**If you are checking the minikube dashboard, make sure you use the correct namespace, i.e., "hydrosat-pdqueiros"**
 
 Generally it will take some time for terraform to finish since it waits until all deployments are done
 
@@ -139,16 +145,16 @@ The bounding box processing has no dependencies.
 Data is in jsonl format, both fields and bounding boxes have the same type of data, we just process them internally in a different manner.
 Bounding box:
 ```
-{"boxId": "01976dbcbdb77dc4b9b61ba545503b77", "coordinatesXMin": 97, "coordinatesYMin": 28, "coordinatesXMax": 112, "coordinatesYMax": 42, "irrigationgArray": [[1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1], [1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0], [0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1], [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1], [1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1], [0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1], [0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1], [1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1], [1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1], [1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0]], "isProcessed": false}
+{"box_id": "01976dbcbdb77dc4b9b61ba545503b77", "coordinates_x_min": 97, "coordinates_y_min": 28, "coordinates_x_max": 112, "coordinates_y_max": 42, "irrigation_array": [[1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1], [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1], [1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0], [0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1], [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1], [1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1], [0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1], [0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1], [1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1], [1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1], [1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0]], "is_processed": false}
 ```
 
 Fields:
 ```
-{"boxId": "01976dbcbdba78e1ba120a45b75e45da", "coordinatesXMin": 10, "coordinatesYMin": 6, "coordinatesXMax": 16, "coordinatesYMax": 8, "irrigationgArray": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], "isProcessed": false}
-{"boxId": "01976dbcbdb77dc4b9b61ba545503b77", "coordinatesXMin": 7, "coordinatesYMin": 4, "coordinatesXMax": 9, "coordinatesYMax": 6, "irrigationgArray": [[0.0, 0.0], [0.0, 0.0]], "isProcessed": false}
+{"box_id": "01976dbcbdba78e1ba120a45b75e45da", "coordinates_x_min": 10, "coordinates_y_min": 6, "coordinates_x_max": 16, "coordinates_y_max": 8, "irrigation_array": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], "is_processed": false}
+{"box_id": "01976dbcbdb77dc4b9b61ba545503b77", "coordinates_x_min": 7, "coordinates_y_min": 4, "coordinates_x_max": 9, "coordinates_y_max": 6, "irrigation_array": [[0.0, 0.0], [0.0, 0.0]], "is_processed": false}
 ```
 
-After processing, the flag `isProcessed` is set to True.
+After processing, the flag `is_processed` is set to True.
 
 Paths are equivalent in S3 and locally (but in locally, we store in the `tmp` folder)
 
@@ -244,17 +250,11 @@ dg list defs
 uv run --active dagster dev
 ```
 
-# Business logic TODO
+6. Launch dagster-webserver:
+```bash
+dagster-webserver
+```
 
-Most of the business logic was implemented to be quite simple, i.e., to respect the exercise requirements, but not to make further assumptions on additional requirements; these should be enough for a POC, whereas further complexity would need to be added on a per-business logic requirements basis.
-
-You can find below some points which I imagine would be the next logical steps for a more robust workflow:
-
-- Convert FieldDocument to process diverse polygons and not just squares.
-- Add FieldDocument processing, i.e., compare field data to bounding box data and any other relevant assets. You can check some dummy field processing in `src/hydrosat/services/core/documents/field_document.py`
-- Add actual bounding box processing, but that would be more complex than required for this exercise, I imagine doing something like saving the bounding box data into PGIS and then making it queriable by the field coordinates. But again, that would add a lot more complexity
-- Add proper run logging (postgres) or find a way to extract the correct run ids from dagster (see `has_event_record` in sensors.py)
-- Improve on [late date arrival](#note-on-late-data-arrival)
 
 
 # Deployment with minikube+helm
@@ -402,3 +402,18 @@ You can see the job has run
 
 
 Congratulations for making it to the end! If you want a simplified versionn go back to the [top](#tldr-ie-minikubeterraform) and have fun with your deployed service.
+
+
+# Future TODO
+
+Most of the business logic was implemented to be quite simple, i.e., to respect the exercise requirements, but not to make further assumptions on additional requirements; these should be enough for a POC, whereas further complexity would need to be added on a per-business logic requirements basis.
+
+You can find below some points which I imagine would be the next logical steps for a more robust workflow:
+
+- Convert FieldDocument to process diverse polygons and not just squares.
+- Add FieldDocument processing, i.e., compare field data to bounding box data and any other relevant assets. You can check some dummy field processing in `src/hydrosat/services/core/documents/field_document.py`
+- Add actual bounding box processing, but that would be more complex than required for this exercise, I imagine doing something like saving the bounding box data into PGIS and then making it queriable by the field coordinates. But again, that would add a lot more complexity
+- Add proper run logging (postgres) or find a way to extract the correct run ids from dagster (see `has_event_record` in sensors.py)
+- Improve on [late date arrival](#note-on-late-data-arrival)
+- Configure dagster properly, e.g., setup credentials
+- Pass secrets correctly, i.e., the "terraformic" way 

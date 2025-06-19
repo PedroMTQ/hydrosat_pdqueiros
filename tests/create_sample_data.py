@@ -43,7 +43,7 @@ def generate_fields_files():
             # we allocate a field to each box for simplicity sake -> later used for partitioning the assets
             for _ in range(random.randint(10,30)):
                 box_id = get_box_id()
-                field_data = [*generate_random_coordinates(max_int=10)]
+                field_data = [*generate_random_coordinates(max_int=10)] + [box_id]
                 data = FieldDocument(*field_data).to_dict()
                 Path(os.path.join(FIELDS_FOLDER, box_id)).mkdir(parents=True, exist_ok=True)
                 with open(os.path.join(FIELDS_FOLDER, box_id, file_name), 'a+') as file:

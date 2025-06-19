@@ -7,18 +7,18 @@ from hydrosat_pdqueiros.services.io.logger import logger
 
 @dataclass
 class BaseDocument():
-    coordinatesXMin: float = field(repr=False)
-    coordinatesYMin: float = field(repr=False)
-    coordinatesXMax: float = field(repr=False)
-    coordinatesYMax: float = field(repr=False)
-    boxId : str
-    irrigationgArray: np.array = field(default=None)
-    isProcessed: np.array = field(default=False)
+    coordinates_x_min: float = field(repr=False)
+    coordinates_y_min: float = field(repr=False)
+    coordinates_x_max: float = field(repr=False)
+    coordinates_y_max: float = field(repr=False)
+    box_id : str
+    irrigation_array: np.array = field(default=None)
+    is_processed: np.array = field(default=False)
 
     @classmethod
     def from_dict(cls, data: dict):
-        if isinstance(data.get('irrigationgArray'), list):
-            data['irrigationgArray'] = np.array(data['irrigationgArray'])
+        if isinstance(data.get('irrigation_array'), list):
+            data['irrigation_array'] = np.array(data['irrigation_array'])
         try:
             return cls(**data)
         except Exception as e:
@@ -28,17 +28,17 @@ class BaseDocument():
 
     # fake processing
     def process(self):
-        self.isProcessed = True
+        self.is_processed = True
 
     def to_dict(self):
         return {
-                'boxId': self.boxId,
-                'coordinatesXMin': self.coordinatesXMin,
-                'coordinatesYMin': self.coordinatesYMin,
-                'coordinatesXMax': self.coordinatesXMax,
-                'coordinatesYMax': self.coordinatesYMax,
-                'irrigationgArray': self.irrigationgArray.tolist(),
-                'isProcessed': self.isProcessed,
+                'box_id': self.box_id,
+                'coordinates_x_min': self.coordinates_x_min,
+                'coordinates_y_min': self.coordinates_y_min,
+                'coordinates_x_max': self.coordinates_x_max,
+                'coordinates_y_max': self.coordinates_y_max,
+                'irrigation_array': self.irrigation_array.tolist(),
+                'is_processed': self.is_processed,
         }
 
 if __name__ == '__main__':

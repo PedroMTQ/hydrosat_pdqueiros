@@ -30,7 +30,7 @@ from hydrosat_pdqueiros.services.settings import (
 DATE_REGEX_PATTERN = re.compile(S3_DATE_REGEX)
 
 
-def fields_dependencies_are_available(context: SensorEvaluationContext,
+def is_valid_field_run_request(context: SensorEvaluationContext,
                                       s3_client: ClientS3,
                                       s3_path: str,
                                       box_id: str,
@@ -39,10 +39,16 @@ def fields_dependencies_are_available(context: SensorEvaluationContext,
     date_obj = datetime.strptime(date_str, DATE_FORMAT)
     all_dates = [datetime.strptime(partition_date, DATE_FORMAT) for partition_date in DAILY_PARTITIONS.get_partition_keys()]
     earliest_date = min(all_dates)
-    # if this is the first asset, we need to assume there's no earlier dependencies
+    # for now we are skipping runs outside of the partition limits
     if date_obj < earliest_date:
         context.log.info(f'Field data {s3_path} precedes the earliest partition date, skipping...')
         return False
+    # TODO generally this condition should be tracked by Dagster and our service should be agnostic to the state of the current output file
+    s3_path_output = s3_path.replace('fields/input', 'fields/output')
+    if s3_client.file_exists(s3_path_output):
+        context.log.info(f'Field data {s3_path} skipped since output file {s3_path_output} already exists...')
+        return False
+
     output_box_file = os.path.join(BOXES_FOLDER_OUTPUT, f'bounding_box_{box_id}.jsonl')
     if not s3_client.file_exists(output_box_file):
         context.log.info(f'Field data {s3_path} skipped since output box file {output_box_file} is not available yet')
@@ -100,7 +106,7 @@ def sensor_fields(context: SensorEvaluationContext):
         # assuming this structure fields/input/01976a1225ca7e32a2daad543cb4391e/fields_2025-06-01.jsonl
         box_id = Path(Path(s3_path).parent).name
         date_str = DATE_REGEX_PATTERN.search(s3_path).group()
-        if not fields_dependencies_are_available(context=context,
+        if not is_valid_field_run_request(context=context,
                                                  s3_client=s3_client,
                                                  s3_path=s3_path,
                                                  box_id=box_id,
@@ -122,6 +128,17 @@ def sensor_fields(context: SensorEvaluationContext):
         yield run_request
 
 
+def is_valid_bounding_box_run_request(context: SensorEvaluationContext,
+                                      s3_client: ClientS3,
+                                      s3_path: str) -> bool:
+    # TODO generally this condition should be tracked by Dagster and our service should be agnostic to the state of the current output file
+    s3_path_output = s3_path.replace('boxes/input', 'boxes/output')
+    if s3_client.file_exists(s3_path_output):
+        context.log.info(f'Bounding box data {s3_path} skipped since output file {s3_path_output} already exists...')
+        return False
+    return True
+
+
 @sensor(
     job=job_process_bounding_boxes,
     # sets sensor to run automatically
@@ -141,6 +158,10 @@ def sensor_bounding_boxes(context: SensorEvaluationContext):
     logger.info(f'Files in S3: {s3_file_paths}')
     run_requests = []
     for s3_path in s3_file_paths:
+        if not is_valid_bounding_box_run_request(context=context,
+                                                 s3_client=s3_client,
+                                                 s3_path=s3_path):
+            continue
         box_id = Path(s3_path).stem.replace('bounding_box_', '')
         run_requests.append(RunRequest(run_key=s3_path,
                                        tags={"s3_path": s3_path,
